@@ -14,7 +14,7 @@ Editor de texto con explorador en arbol is free software: you can redistribute i
 >Editor de texto con explorador en arbol is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 >You should have received a copy of the GNU General Public License along with Editor de texto con explorador en arbol.  If not, see <http://www.gnu.org/licenses/>.
 
-Este editor pretende ser una ampliación del Bloc de Notas tradicional. Incorpora una vista en árbol donde podemos controlar los archivos que vamos creado.
+Este editor pretende ser una ampliación del Bloc de Notas tradicional. Incorpora una vista en árbol donde podemos controlar los archivos que vamos creado. Ha sido desarrollado en Eclipse Mars con Java 1.7.
 
 ![Principal](principal.PNG)
 
