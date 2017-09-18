@@ -1,0 +1,1079 @@
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.GraphicsEnvironment;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.print.PrinterException;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JColorChooser;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
+import javax.swing.JToolBar;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Element;
+import javax.swing.text.Highlighter;
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.StyledEditorKit;
+import javax.swing.text.StyledEditorKit.AlignmentAction;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
+
+import añadidos.BuscaYReemplaza;
+
+/**
+ * Clase Editor de Textos. Se debe usar junto con la clase Principal (pantalla principal)
+ * y la clase ArbolFicheros, que es el arbol donde Editor toma sus parámetros, etc.
+ * 
+ * @author Alejandro Campos
+ * alex.selah@yahoo.es
+ * © 2013
+ *
+ *
+ *		Este programa se distribuye bajo licencia pública GNU-GPL. Forma parte del programa completo llamado
+ * Editor de texto con explorador en árbol.
+ * Eres libre de copiar, distribur y mejorar el programa bajo los términos de la licencia de la 
+ * Free Software Foundation. Ante cualquier duda, póngase en contacto conmigo en el email arriba.
+ * 
+ * Puede ver una traducción de la licencia GNU-GPL en español en el siguiente enlace:
+ * http://www.viti.es/gnu/licenses/gpl.html
+ * 
+ * This file is part of Editor de texto con explorador en arbol.
+ * 
+ *     Editor de texto con explorador en arbol is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * 		Editor de texto con explorador en arbol is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * 		You should have received a copy of the GNU General Public License
+ * along with Editor de texto con explorador en arbol.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
+
+public class Editor implements ActionListener, MouseListener, MouseMotionListener {
+	//Variables globales
+	JPanel panel;
+	JInternalFrame frame;
+	JTextPane textPane;
+	JScrollPane scrollPane;
+	JMenuBar menu;
+	JMenu menuEstilo;
+	JToolBar barraBotones;
+	JButton btnNegrita, btnCursiva, btnSubrayado, btnColorLetra, btnColorFondo, btnColorFondoLetra;
+	JButton btnEstilo, btnCopiar, btnCortar, btnPegar, btnAlinearI, btnAlinearD, btnAlinearC, btnAlinearJ;
+	boolean cambiado;
+	File archivo;
+	
+/**
+ * Contructor del Editor de Textos
+ * 
+ * @param jfr es el panel donde se situará el editor de textos
+ * @param nombreArchivo es el nombre del archivo que el editor debe crear al inicializarse
+ */
+  public Editor (JInternalFrame jfr, String nombreArchivo){
+		this(jfr);
+		
+		//Carga del archivo
+		archivo = new File("C:\\" + nombreArchivo);	
+		if (archivo.exists()){
+			JOptionPane.showMessageDialog(null,"El archivo ya existe","ERROR", JOptionPane.ERROR_MESSAGE, null); 
+		}
+	}
+  
+  /**
+   * Contructor principal del Editor de Textos
+   * 
+   * @param jfr es el panel donde se situará el editor
+   */
+  public Editor(JInternalFrame jfr) {
+	  
+	cambiado = false;
+	frame = jfr;
+    textPane = new JTextPane();
+    textPane.setContentType("text/html");
+    scrollPane = new JScrollPane(textPane);
+
+    panel = new JPanel();
+    //JPanel north = jfr;
+
+    menu = new JMenuBar();
+    menuEstilo = new JMenu();
+    menuEstilo.setText("Estilo de Texto");
+    
+    btnNegrita=new JButton();
+    btnNegrita.setIcon(new ImageIcon("src/recursos/negrita.png"));
+    btnNegrita.addActionListener(this);
+    btnNegrita.setToolTipText("Negrita");
+    
+    btnCursiva=new JButton();
+    btnCursiva.setIcon(new ImageIcon("src/recursos/cursiva.png"));
+    btnCursiva.addActionListener(this);
+    btnCursiva.setToolTipText("Cursiva");
+    
+    btnSubrayado=new JButton();
+    btnSubrayado.setIcon(new ImageIcon("src/recursos/subrayado.png"));
+    btnSubrayado.addActionListener(this);
+    btnSubrayado.setToolTipText("Subrayado");
+    
+    btnCopiar=new JButton();
+    btnCopiar.setIcon(new ImageIcon("src/recursos/copiar.png"));
+    btnCopiar.addActionListener(this);
+    btnCopiar.setToolTipText("Copiar");
+    
+    btnCortar=new JButton();
+    btnCortar.setIcon(new ImageIcon("src/recursos/cortar.png"));
+    btnCortar.addActionListener(this);
+    btnCortar.setToolTipText("Cortar");
+    
+    btnPegar=new JButton();
+    btnPegar.setIcon(new ImageIcon("src/recursos/pegar.png"));
+    btnPegar.addActionListener(this);
+    btnPegar.setToolTipText("Pegar");
+    
+    btnAlinearI=new JButton();
+    btnAlinearI.setIcon(new ImageIcon("src/recursos/izquierda.png"));
+    btnAlinearI.addActionListener(this);
+    btnAlinearI.setToolTipText("Alinear texto a la Izquierda");
+    
+    btnAlinearC=new JButton();
+    btnAlinearC.setIcon(new ImageIcon("src/recursos/centrado.png"));
+    btnAlinearC.addActionListener(this);
+    btnAlinearC.setToolTipText("Alinear texto Centrado");
+    
+    btnAlinearD=new JButton();
+    btnAlinearD.setIcon(new ImageIcon("src/recursos/derecha.png"));
+    btnAlinearD.addActionListener(this);
+    btnAlinearD.setToolTipText("Alinear texto a la Derecha");
+    
+    btnAlinearJ=new JButton();
+    btnAlinearJ.setIcon(new ImageIcon("src/recursos/justificado.png"));
+    btnAlinearJ.addActionListener(this);
+    btnAlinearJ.setToolTipText("Justificar Texto");
+    
+    btnEstilo=new JButton();
+    btnEstilo.setIcon(new ImageIcon("src/recursos/estilo.png"));
+    btnEstilo.addActionListener(this);
+    btnEstilo.setToolTipText("Cambiar el tipo y tamaño de la letra");
+    
+    btnColorLetra=new JButton();
+    btnColorLetra.setIcon(new ImageIcon("src/recursos/colorletra.png"));
+    btnColorLetra.addActionListener(this);
+    btnColorLetra.setToolTipText("Cambiar el color de la fuente");
+
+    btnColorFondoLetra=new JButton();
+    btnColorFondoLetra.setIcon(new ImageIcon("src/recursos/fondoletra.png"));
+    btnColorFondoLetra.addActionListener(this);
+    btnColorFondoLetra.setToolTipText("Cambiar el color de fondo de la letra, tipo marcador");
+    
+    btnColorFondo=new JButton();
+    btnColorFondo.setIcon(new ImageIcon("src/recursos/fondo.png"));
+    btnColorFondo.addActionListener(this);
+    btnColorFondo.setToolTipText("Cambia el color de fondo de la página");
+    
+    barraBotones = new JToolBar();
+    barraBotones.addSeparator();
+    barraBotones.add(btnNegrita);
+    barraBotones.add(btnCursiva);
+    barraBotones.add(btnSubrayado);
+    barraBotones.addSeparator();
+    barraBotones.add(btnCopiar);
+    barraBotones.add(btnCortar);
+    barraBotones.add(btnPegar);
+    barraBotones.addSeparator();
+    barraBotones.add(btnAlinearI);
+    barraBotones.add(btnAlinearC);
+    barraBotones.add(btnAlinearD);
+    barraBotones.add(btnAlinearJ);
+    barraBotones.addSeparator();
+    barraBotones.add(btnEstilo);
+    barraBotones.addSeparator();
+    barraBotones.add(btnColorLetra);
+    barraBotones.add(btnColorFondoLetra);
+    barraBotones.add(btnColorFondo);
+    barraBotones.setBorder(null);
+    barraBotones.setFloatable(false);
+    
+    //Si presiona cualquier tecla dentro del panel de texto, pensaremos que ha modificado algo 
+    //para dar la opción de guardar
+    textPane.addKeyListener(new KeyListener() {
+		@Override
+		public void keyTyped(KeyEvent arg0) {
+			cambiado = true;			
+		}
+		@Override
+		public void keyReleased(KeyEvent arg0) {			
+		}
+		@Override
+		public void keyPressed(KeyEvent arg0) {
+			cambiado = true;
+		}
+	});
+
+    panel.setLayout(new BorderLayout());
+    panel.add(barraBotones, BorderLayout.SOUTH);
+    panel.add(scrollPane,BorderLayout.CENTER);
+    panel.setVisible(true);
+    frame.setTitle("Editor de Textos");
+    frame.getContentPane().setLayout(new BorderLayout());
+    frame.getContentPane().add(panel, BorderLayout.NORTH);
+    frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.setVisible(true);
+    frame.setResizable(false);
+    frame.setFrameIcon(new ImageIcon("src/recursos/maquinaescribir.png"));
+    //frame.pack();
+    textPane.addMouseListener(this);
+    textPane.addMouseMotionListener(this);
+    textPane.setOpaque(false);
+    barraBotones.addMouseMotionListener(this);
+    
+    textPane.requestFocus();
+    textPane.setOpaque(true);
+  }
+  
+  /**
+   * Devuelve el valor de la variable cambiado 
+   * @return cambiado
+   */
+  public boolean cambiado(){
+	  return cambiado;
+  }
+  
+  /**
+   * Deja en blanco el área del editor de textos. Borra todo su contenido
+   */
+  public void enBlanco(){
+	  textPane.setText("");
+  }
+  
+  /**
+   * Guardar() Guarda el contenido del editor en un archivo que es seleccionado mediante
+   * un jFileChooser.
+   */
+  public void guardar() {
+	  textPane.requestFocus();
+	  StyledDocument doc2 = textPane.getStyledDocument();
+	  HTMLEditorKit kit = new HTMLEditorKit();
+      BufferedOutputStream out;
+      JFileChooser fileChooser = new JFileChooser();   
+      
+      int result = fileChooser.showSaveDialog(null);
+      if (result == JFileChooser.APPROVE_OPTION )
+      {
+        String loc_arch = (fileChooser.getSelectedFile()).getPath() + ".html";      
+        File arch_texto = new File(loc_arch);
+        try {
+                      out = new BufferedOutputStream(new FileOutputStream(arch_texto));
+                      int co = (doc2.getStartPosition()).getOffset();
+                      int len = doc2.getLength();
+                      kit.write(out, doc2, co, len);
+                      out.flush();
+                      out.close();
+                      
+                      JOptionPane.showMessageDialog(null, "Se guardo con exito. Se guardó con extensión .HTML " +
+                      		" para conservar el formato del texto", "Guardar", JOptionPane.INFORMATION_MESSAGE);
+          } catch (FileNotFoundException e) {
+                 JOptionPane.showMessageDialog(null, "Error al crear el archivo: "+ e.getMessage(), 
+                      "Error al Guardar", JOptionPane.ERROR_MESSAGE);
+          } catch (IOException e1){
+                 JOptionPane.showMessageDialog(null, "Error al guardar el archivo: "+ e1.getMessage(), 
+                      "Error al Guardar", JOptionPane.ERROR_MESSAGE);
+          } catch (BadLocationException e2){
+                 JOptionPane.showMessageDialog(null, "Error al intentar guardar texto: "+ e2.getMessage(), 
+                      "Error al Guardar", JOptionPane.ERROR_MESSAGE);
+          }
+      }
+      textPane.requestFocus();
+  }  //fin de método guardar
+  
+  /**
+   * Guardar(String) guarda el contenido del editor de textos en un archivo
+   * cuyo nombre le pasamos por parametro.
+   * @param archivo es el nombre del archivo que vamos a crear.
+   */
+  public void guardar(String archivo) {
+	  StyledDocument doc2 = textPane.getStyledDocument();
+
+	  HTMLEditorKit kit = new HTMLEditorKit();
+      BufferedOutputStream out;
+      File ar = new File("./docs/"+archivo+".acf");
+      if (ar.exists()){
+    	  ar.delete();
+      }
+      JFileChooser fileChooser = new JFileChooser();   
+      fileChooser.setSelectedFile(ar);
+      
+      String loc_arch = (fileChooser.getSelectedFile()).getPath();      
+      File arch_texto = new File(loc_arch);
+      try {
+    	  out = new BufferedOutputStream(new FileOutputStream(arch_texto));
+    	  int co = (doc2.getStartPosition()).getOffset();
+    	  int len = doc2.getLength();
+    	  kit.write(out, doc2, co, len);
+    	  out.flush();
+    	  out.close();
+    	  
+      } catch (FileNotFoundException e) {
+
+      } catch (IOException e1){
+
+      } catch (BadLocationException e2){
+
+      }
+      textPane.requestFocus();
+  }  //fin de método guardar con String
+  
+  
+  /**
+   * Abrir() es un método publico que abre un nuevo documento de texto y lo
+   * anexa al editor.
+   */
+  public void abrir (){
+	  StyledDocument doc = textPane.getStyledDocument();
+	  HTMLEditorKit kit = new HTMLEditorKit();
+      BufferedInputStream in;
+   
+      JFileChooser fileChooser = new JFileChooser();   
+      FileNameExtensionFilter filter = new FileNameExtensionFilter("Archivos soportados: "
+              + "acf y txt", "acf","txt");
+      
+      fileChooser.setFileFilter(filter);
+      fileChooser.setAcceptAllFileFilterUsed(false);
+      int result = fileChooser.showOpenDialog(null);
+      if (result == JFileChooser.APPROVE_OPTION )
+      {
+          try {
+              //quito lo viejo
+              int fin = doc.getLength();
+              doc.remove(0, fin);
+                              
+              //agrego lo nuevo
+              in = new BufferedInputStream(new FileInputStream(fileChooser.getSelectedFile()));
+              kit.read(in, doc, 0);
+
+              in.close();                                           
+          } catch (FileNotFoundException e) {
+                 JOptionPane.showMessageDialog(null, "Error al abrrir el archivo: "+ e.getMessage(), 
+                      "Error en Carga", JOptionPane.ERROR_MESSAGE);
+          } catch (IOException e1){
+                 JOptionPane.showMessageDialog(null, "Error al leer el archivo: "+ e1.getMessage(), 
+                      "Error en Carga", JOptionPane.ERROR_MESSAGE);
+          } catch (BadLocationException e2){
+                 JOptionPane.showMessageDialog(null, "Error al cargar el archivo: "+ e2.getMessage(), 
+                      "Error en Carga", JOptionPane.ERROR_MESSAGE);
+          }
+          frame.setTitle("Editor de Textos  ---   " + fileChooser.getName());
+          textPane.requestFocus();
+      }
+  }//fin de método Abrir
+  
+  public void abrir (String archivo){
+	  StyledDocument doc = textPane.getStyledDocument();
+	  HTMLEditorKit kit = new HTMLEditorKit();
+      BufferedInputStream in;
+   
+      JFileChooser fileChooser = new JFileChooser();   
+      FileNameExtensionFilter filter = new FileNameExtensionFilter("Archivos soportados: "
+              + "acf y txt", "acf","txt");
+      
+      fileChooser.setFileFilter(filter);
+      fileChooser.setSelectedFile(new File("./docs/"+archivo+".acf"));
+      try {
+    	  //quito lo viejo
+    	  int fin = doc.getLength();
+    	  doc.remove(0, fin);
+    	  //undo.discardAllEdits();
+    	  
+    	  //agrego lo nuevo
+    	  in = new BufferedInputStream(new FileInputStream(fileChooser.getSelectedFile()));
+    	  kit.read(in, doc, 0);
+    	  
+    	  in.close();                                           
+      } catch (FileNotFoundException e) {
+    	  JOptionPane.showMessageDialog(null, "Error al abrir el archivo: "+ e.getMessage(), 
+    			  "Error en Carga", JOptionPane.ERROR_MESSAGE);
+      } catch (IOException e1){
+    	  JOptionPane.showMessageDialog(null, "Error al leer el archivo: "+ e1.getMessage(), 
+    			  "Error en Carga", JOptionPane.ERROR_MESSAGE);
+      } catch (BadLocationException e2){
+    	  JOptionPane.showMessageDialog(null, "Error al cargar el archivo: "+ e2.getMessage(), 
+    			  "Error en Carga", JOptionPane.ERROR_MESSAGE);
+      }
+     frame.setTitle("Editor de Textos  ---   " + archivo);
+     textPane.requestFocus();
+  }
+  
+  @Override
+	public void actionPerformed(ActionEvent e) {
+	  if(e.getSource()== btnNegrita){
+		  cambiado=true;
+		  Action negrita = new BoldAction();
+		  negrita.actionPerformed(e);
+	  }
+	  if(e.getSource()==btnCursiva){
+		  cambiado=true;
+		  Action cursiva = new ItalicAction();
+		  cursiva.actionPerformed(e);
+	  }
+	  if(e.getSource() == btnColorFondo){
+		  cambiado=true;
+		  Action fondoAction = new FondoAction();
+		  fondoAction.actionPerformed(e);
+		  textPane.requestFocus();
+	  }
+	  if(e.getSource() == btnSubrayado){
+		  cambiado=true;
+		  Action sub = new UnderlineAction();
+		  sub.actionPerformed(e);
+	  }
+	  if(e.getSource() == btnColorFondoLetra){
+		  cambiado=true;
+		  Action fondo = new BackgroundAction();
+		  fondo.actionPerformed(e);
+		  textPane.requestFocus();
+	  }
+	  if(e.getSource() == btnEstilo){
+		  cambiado=true;
+		  Action estiloyT = new FontAndSizeAction();
+		  estiloyT.actionPerformed(e);
+		  textPane.requestFocus();
+	  }
+	  if(e.getSource() == btnColorLetra){
+		  cambiado=true;
+		  Action colorLetra = new ForegroundAction();
+		  colorLetra.actionPerformed(e);
+	  }
+	  if(e.getSource() == btnCopiar){
+		  textPane.copy();
+	  }
+	  if(e.getSource() == btnPegar){
+		  cambiado=true;
+		  textPane.paste();
+	  }
+	  if(e.getSource() == btnCortar){
+		  cambiado=true;
+		  textPane.cut();
+	  }
+	  if(e.getSource() == btnAlinearI){
+		  cambiado=true;
+		  Action iz = new AlignmentAction(null,StyleConstants.ALIGN_LEFT);
+		  iz.actionPerformed(e);
+		  
+	  }
+	  if(e.getSource() == btnAlinearC){
+		  cambiado=true;
+		  Action iz = new AlignmentAction(null,StyleConstants.ALIGN_CENTER);
+		  iz.actionPerformed(e);
+		  
+	  }
+	  if(e.getSource() == btnAlinearD){
+		  cambiado=true;
+		  Action iz = new AlignmentAction(null,StyleConstants.ALIGN_RIGHT);
+		  iz.actionPerformed(e);
+		  
+	  }
+	  if(e.getSource() == btnAlinearJ){
+		  cambiado=true;
+		  Action iz = new AlignmentAction(null, StyleConstants.ALIGN_JUSTIFIED);
+		  iz.actionPerformed(e);
+		  
+	  }
+	  
+	 
+	}//FIN DE ACTION PERFORMED
+@Override
+public void mouseClicked(MouseEvent arg0) {
+	
+}
+@Override
+public void mouseEntered(MouseEvent arg0) {
+
+}
+@Override
+public void mouseExited(MouseEvent arg0) {
+	
+}
+@Override
+public void mousePressed(MouseEvent arg0) {
+	
+}
+@Override
+public void mouseReleased(MouseEvent arg0) {
+	
+}
+@Override
+public void mouseDragged(MouseEvent arg0) {
+	
+}
+@Override
+public void mouseMoved(MouseEvent e) {
+	if(e.getSource() == barraBotones){
+		//Si se situa encima de la barra de botones, cambia el cursor a una mano
+		panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		
+	}
+	if (e.getSource() == textPane){
+		//si está encima del area de texto cambia el cursor a modo texto
+		textPane.setCursor(new Cursor(Cursor.TEXT_CURSOR));
+	}
+}
+public int buscar() {
+	int encontrados=0;
+	try{		
+		String frase = JOptionPane.showInputDialog(null, "Introduzca el texto a buscar", "Buscar");
+		Highlighter highlighter = textPane.getHighlighter();
+		HTMLDocument document = (HTMLDocument) textPane.getDocument();
+		for (HTMLDocument.Iterator it = document.getIterator(HTML.Tag.CONTENT);
+				it.isValid(); it.next()) {
+			try {
+				String fragmento = document.getText(it.getStartOffset(),
+						it.getEndOffset() - it.getStartOffset());
+				
+				Pattern patron = Pattern.compile(frase);
+				Matcher matcher = patron.matcher(fragmento);
+				while (matcher.find()) {
+					highlighter.addHighlight(it.getStartOffset() + matcher.start(),
+							it.getStartOffset() + matcher.end(),
+							DefaultHighlighter.DefaultPainter);
+					++encontrados;
+				}
+			} catch (BadLocationException ex) {
+			}
+		}	
+	}
+	catch (NullPointerException e){
+		
+	}
+	
+	return encontrados;
+}//Fin de buscar
+
+public void reemplazar(){
+	BuscaYReemplaza b = new BuscaYReemplaza(textPane);
+	b.setVisible(true);
+}
+
+public void imprimir() {
+	try {
+		textPane.print();
+	} catch (PrinterException e) {
+		e.printStackTrace();
+	}
+}
+
+}// Fin clase Editor
+
+//AQUI EMPIEZAN LAS CLASES DE ACCION, PARA CAMBIAR EL TEXTO...
+
+/**
+ * Clase que convierte en negrita un texto seleccionado
+ * @author Alejandro Campos
+ *
+ */
+class BoldAction extends StyledEditorKit.StyledTextAction {
+  private static final long serialVersionUID = 9174670038684056758L;
+
+  public BoldAction() {
+    super("font-bold");
+  }
+
+  public String toString() {
+    return "Bold";
+  }
+
+  public void actionPerformed(ActionEvent e) {
+    JEditorPane editor = getEditor(e);
+    if (editor != null) {
+      StyledEditorKit kit = getStyledEditorKit(editor);
+      MutableAttributeSet attr = kit.getInputAttributes();
+      boolean bold = (StyleConstants.isBold(attr)) ? false : true;
+      SimpleAttributeSet sas = new SimpleAttributeSet();
+      StyleConstants.setBold(sas, bold);
+      setCharacterAttributes(editor, sas, false);
+
+    }
+  }
+}//Fin clase BoldAction
+
+/**
+ * Clase que subraya el texto seleccionado
+ * @author Alejandro Campos
+ *
+ */
+class UnderlineAction extends StyledEditorKit.StyledTextAction {
+	
+	private static final long serialVersionUID = 1L;
+
+	public UnderlineAction(){
+		super("underline");
+	}
+	
+	public String toString(){
+		return "Underline";
+	}
+	
+	public void actionPerformed(ActionEvent e) {
+		JEditorPane editor = getEditor(e);
+		if (editor != null) {
+			StyledEditorKit kit = getStyledEditorKit(editor);
+			MutableAttributeSet attr = kit.getInputAttributes();
+		    boolean under = (StyleConstants.isUnderline(attr)) ? false : true;
+		    SimpleAttributeSet sas = new SimpleAttributeSet();
+		    StyleConstants.setUnderline(sas, under);
+		    setCharacterAttributes(editor, sas, false);	
+		}
+	}
+}//Fin de UnderlineAction
+
+/**
+ * Clase que convierte en cursiva un texto seleccionado
+ * @author Alejandro Campos
+ *
+ */
+class ItalicAction extends StyledEditorKit.StyledTextAction {
+
+  private static final long serialVersionUID = -1428340091100055456L;
+
+  public ItalicAction() {
+    super("font-italic");
+  }
+
+  public String toString() {
+    return "Italic";
+  }
+
+  public void actionPerformed(ActionEvent e) {
+    JEditorPane editor = getEditor(e);
+    if (editor != null) {
+      StyledEditorKit kit = getStyledEditorKit(editor);
+      MutableAttributeSet attr = kit.getInputAttributes();
+      boolean italic = (StyleConstants.isItalic(attr)) ? false : true;
+      SimpleAttributeSet sas = new SimpleAttributeSet();
+      StyleConstants.setItalic(sas, italic);
+      setCharacterAttributes(editor, sas, false);
+    }
+  }
+}//Fin de ItalicAction
+
+/**
+ * Clase que cambia el color de la letra seleccionada
+ * @author Alejandro Campos
+ *
+ */
+class ForegroundAction extends StyledEditorKit.StyledTextAction {
+
+  private static final long serialVersionUID = 6384632651737400352L;
+
+  JColorChooser colorChooser = new JColorChooser();
+
+  JDialog dialog = new JDialog();
+
+  boolean noChange = false;
+
+  boolean cancelled = false;
+
+  public ForegroundAction() {
+    super("foreground");
+
+  }
+
+  public void actionPerformed(ActionEvent e) {
+    JTextPane editor = (JTextPane) getEditor(e);
+
+    if (editor == null) {
+      JOptionPane.showMessageDialog(null,
+          "Es necesario seleccionar el panel de edición antes de poder cambiar el color.", "Error",
+          JOptionPane.ERROR_MESSAGE);
+      return;
+    }
+    int p0 = editor.getSelectionStart();
+    StyledDocument doc = getStyledDocument(editor);
+    Element paragraph = doc.getCharacterElement(p0);
+    AttributeSet as = paragraph.getAttributes();
+    fg = StyleConstants.getForeground(as);
+    if (fg == null) {
+      fg = Color.BLACK;
+    }
+    colorChooser.setColor(fg);
+
+    JButton accept = new JButton("OK");
+    accept.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        fg = colorChooser.getColor();
+        dialog.dispose();
+      }
+    });
+
+    JButton cancel = new JButton("Cancelar");
+    cancel.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        cancelled = true;
+        dialog.dispose();
+      }
+    });
+
+    JButton none = new JButton("Ninguno");
+    none.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        noChange = true;
+        dialog.dispose();
+      }
+    });
+
+    JPanel buttons = new JPanel();
+    buttons.add(accept);
+    buttons.add(none);
+    buttons.add(cancel);
+
+    dialog.getContentPane().setLayout(new BorderLayout());
+    dialog.getContentPane().add(colorChooser, BorderLayout.CENTER);
+    dialog.getContentPane().add(buttons, BorderLayout.SOUTH);
+    dialog.setModal(true);
+    dialog.pack();
+    dialog.setVisible(true);
+
+    if (!cancelled) {
+
+      MutableAttributeSet attr = null;
+      if (editor != null) {
+        if (fg != null && !noChange) {
+          attr = new SimpleAttributeSet();
+          StyleConstants.setForeground(attr, fg);
+          setCharacterAttributes(editor, attr, false);
+        }
+      }
+    }// end if color != null
+    noChange = false;
+    cancelled = false;
+  }
+
+  private Color fg;
+}//Fin de ForegroundAction
+
+/**
+ * Clase que cambia el color de fondo de un texto seleccionado, sin afectar al resto de texto
+ * de un JTextPane
+ * @author Alejandro Campos
+ *
+ */
+class BackgroundAction extends StyledEditorKit.StyledTextAction {
+
+	  private static final long serialVersionUID = 6384632651737400352L;
+	  JColorChooser colorChooser = new JColorChooser();
+	  JDialog dialog = new JDialog();
+	  boolean noChange = false;
+	  boolean cancelled = false;
+	  public BackgroundAction() {
+	    super("background");
+
+	  }
+
+	  public void actionPerformed(ActionEvent e) {
+	    JTextPane editor = (JTextPane) getEditor(e);
+
+	    if (editor == null) {
+	      JOptionPane.showMessageDialog(null,
+	          "Es necesario seleccionar el panel de edición antes de poder cambiar el color.", "Error",
+	          JOptionPane.ERROR_MESSAGE);
+	      return;
+	    }
+	    int p0 = editor.getSelectionStart();
+	    StyledDocument doc = getStyledDocument(editor);
+	    Element paragraph = doc.getCharacterElement(p0);
+	    AttributeSet as = paragraph.getAttributes();
+	    fg = StyleConstants.getBackground(as);
+	    if (fg == null) {
+	      fg = Color.WHITE;
+	    }
+	    colorChooser.setColor(fg);
+
+	    JButton accept = new JButton("OK");
+	    accept.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent ae) {
+	        fg = colorChooser.getColor();
+	        dialog.dispose();
+	      }
+	    });
+
+	    JButton cancel = new JButton("Cancelar");
+	    cancel.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent ae) {
+	        cancelled = true;
+	        dialog.dispose();
+	      }
+	    });
+
+	    JButton none = new JButton("Ninguno");
+	    none.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent ae) {
+	        noChange = true;
+	        dialog.dispose();
+	      }
+	    });
+
+	    JPanel buttons = new JPanel();
+	    buttons.add(accept);
+	    buttons.add(none);
+	    buttons.add(cancel);
+
+	    dialog.getContentPane().setLayout(new BorderLayout());
+	    dialog.getContentPane().add(colorChooser, BorderLayout.CENTER);
+	    dialog.getContentPane().add(buttons, BorderLayout.SOUTH);
+	    dialog.setModal(true);
+	    dialog.pack();
+	    dialog.setVisible(true);
+
+	    if (!cancelled) {
+
+	      MutableAttributeSet attr = null;
+	      if (editor != null) {
+	        if (fg != null && !noChange) {
+	          attr = new SimpleAttributeSet();
+	          StyleConstants.setBackground(attr, fg);
+	          setCharacterAttributes(editor, attr, false);
+	        }
+	      }
+	    }// fin si color != null
+	    noChange = false;
+	    cancelled = false;
+	  }
+
+	  private Color fg;
+}//Fin de BackgroundAction
+
+/**
+ * Clase que cambia el color del fondo de un panel o JInternalFrame
+ * @author Alejandro Campos
+ *
+ */
+class FondoAction extends StyledEditorKit.StyledTextAction {
+	  private static final long serialVersionUID = 1L;
+	  JColorChooser colorChooser = new JColorChooser();
+	  JDialog dialog = new JDialog();
+	  boolean noChange = false;
+	  boolean cancelled = false;
+	  private Color fg;
+
+	  public FondoAction() {
+		  super("");
+	  }
+
+	  public void actionPerformed(ActionEvent e) {
+	    JTextPane editor = (JTextPane) getEditor(e);
+	    //JTextPane editor = (JTextPane) e.getSource();
+	    if (editor == null) {
+	      JOptionPane.showMessageDialog(null,
+	          "Es necesario seleccionar el panel de edición antes de poder cambiar el color.", "Error",
+	          JOptionPane.ERROR_MESSAGE);
+	      return;
+	    }
+	    
+	    if (fg == null) {
+	      fg = Color.WHITE;
+	    }
+	    colorChooser.setColor(fg);
+
+	    JButton accept = new JButton("OK");
+	    accept.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent ae) {
+	        fg = colorChooser.getColor();
+	        dialog.dispose();
+	      }
+	    });
+
+	    JButton cancel = new JButton("Cancelar");
+	    cancel.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent ae) {
+	        cancelled = true;
+	        dialog.dispose();
+	      }
+	    });
+
+	    JButton none = new JButton("Ninguno");
+	    none.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent ae) {
+	        noChange = true;
+	        dialog.dispose();
+	      }
+	    });
+
+	    JPanel buttons = new JPanel();
+	    buttons.add(accept);
+	    buttons.add(none);
+	    buttons.add(cancel);
+
+	    dialog.getContentPane().setLayout(new BorderLayout());
+	    dialog.getContentPane().add(colorChooser, BorderLayout.CENTER);
+	    dialog.getContentPane().add(buttons, BorderLayout.SOUTH);
+	    dialog.setModal(true);
+	    dialog.pack();
+	    dialog.setVisible(true);
+
+	    if (!cancelled) {
+	      if (editor != null) {
+	        if (fg != null && !noChange) {
+	          editor.setBackground(fg);
+	        }
+	      }
+	    }// fin si color != null
+	    noChange = false;
+	    cancelled = false;
+	  }
+}//Fin de FondoAction
+
+/**
+ * Clase que cambia el tamaño y el estilo de letra de un texto seleccionado
+ * @author Alejandro Campos
+ *
+ */
+class FontAndSizeAction extends StyledEditorKit.StyledTextAction {
+
+  private static final long serialVersionUID = 584531387732416339L;
+  private String family;
+  private float fontSize;
+  JDialog formatText;
+  private boolean accept = false;
+  JComboBox<String> fontFamilyChooser;
+  JComboBox<Float> fontSizeChooser;
+
+  public FontAndSizeAction() {
+    super("Font and Size"); 
+  }
+  public String toString() {
+    return "Fuente y tamaño de letra";
+  }
+
+  public void actionPerformed(ActionEvent e) {
+	
+    JTextPane editor = (JTextPane) getEditor(e);
+    int p0=0;
+    try{
+    	p0 = editor.getSelectionStart();    	
+    }catch (NullPointerException err){
+    	JOptionPane.showMessageDialog(null,
+  	          "Es necesario seleccionar el panel de edición antes de poder cambiar el estilo.", "Error",
+  	          JOptionPane.ERROR_MESSAGE);
+    	return;
+    }
+    StyledDocument doc = getStyledDocument(editor);
+    Element paragraph = doc.getCharacterElement(p0);
+    AttributeSet as = paragraph.getAttributes();
+
+    family = StyleConstants.getFontFamily(as);
+    fontSize = StyleConstants.getFontSize(as);
+
+    formatText = new JDialog(new JFrame(), "Fuente y Tamaño de texto", true);
+    formatText.getContentPane().setLayout(new BorderLayout());
+    formatText.setLocationRelativeTo(null);
+    
+    JPanel choosers = new JPanel();
+    choosers.setLayout(new GridLayout(2, 1));
+
+    JPanel fontFamilyPanel = new JPanel();
+    fontFamilyPanel.add(new JLabel("Fuente"));
+
+    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+    String[] fontNames = ge.getAvailableFontFamilyNames();
+
+    fontFamilyChooser = new JComboBox<String>();
+    for (int i = 0; i < fontNames.length; i++) {
+      fontFamilyChooser.addItem(fontNames[i]);
+    }
+    fontFamilyChooser.setSelectedItem(family);
+    fontFamilyPanel.add(fontFamilyChooser);
+    choosers.add(fontFamilyPanel);
+
+    JPanel fontSizePanel = new JPanel();
+    fontSizePanel.add(new JLabel("Tamaño"));
+    fontSizeChooser = new JComboBox<Float>();
+    fontSizeChooser.setEditable(true);
+    fontSizeChooser.addItem(new Float(4));
+    fontSizeChooser.addItem(new Float(8));
+    fontSizeChooser.addItem(new Float(12));
+    fontSizeChooser.addItem(new Float(16));
+    fontSizeChooser.addItem(new Float(20));
+    fontSizeChooser.addItem(new Float(24));
+    fontSizeChooser.addItem(new Float(48));
+    fontSizeChooser.addItem(new Float(56));
+    fontSizeChooser.addItem(new Float(64));
+    fontSizeChooser.addItem(new Float(78));
+    fontSizeChooser.setSelectedItem(new Float(fontSize));
+    fontSizePanel.add(fontSizeChooser);
+    choosers.add(fontSizePanel);
+
+    JButton ok = new JButton("OK");
+    ok.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        accept = true;
+        formatText.dispose();
+        family = (String) fontFamilyChooser.getSelectedItem();
+        fontSize = Float.parseFloat(fontSizeChooser.getSelectedItem().toString());
+      }
+    });
+
+    JButton cancel = new JButton("Cancelar");
+    cancel.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        formatText.dispose();
+      }
+    });
+
+    JPanel buttons = new JPanel();
+    buttons.add(ok);
+    buttons.add(cancel);
+    formatText.getContentPane().add(choosers, BorderLayout.CENTER);
+    formatText.getContentPane().add(buttons, BorderLayout.SOUTH);
+    formatText.pack();
+    formatText.setVisible(true);
+
+    MutableAttributeSet attr = null;
+    if (editor != null && accept) {
+      attr = new SimpleAttributeSet();
+      StyleConstants.setFontFamily(attr, family);
+      StyleConstants.setFontSize(attr, (int) fontSize);
+      setCharacterAttributes(editor, attr, false);
+    }
+    //e.setSource(editor);
+  }
+}//Fin de Tamaño y Estilo de Texto
